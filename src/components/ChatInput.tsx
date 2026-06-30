@@ -1,15 +1,24 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { getChatModelLabel, type ChatModelOption } from "@/lib/models";
 
 interface ChatInputProps {
   onSend: (text: string, model: string) => void;
   disabled: boolean;
+  selectedModel: string;
+  onModelChange: (model: string) => void;
+  models: ChatModelOption[];
 }
 
-export default function ChatInput({ onSend, disabled }: ChatInputProps) {
+export default function ChatInput({
+  onSend,
+  disabled,
+  selectedModel,
+  onModelChange,
+  models,
+}: ChatInputProps) {
   const [value, setValue] = useState("");
-  const [selectedModel, setSelectedModel] = useState("phi-3.5-financial");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   function submit() {
@@ -40,13 +49,15 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
         <div className="flex shrink-0 items-center">
           <select
             value={selectedModel}
-            onChange={(e) => setSelectedModel(e.target.value)}
+            onChange={(e) => onModelChange(e.target.value)}
             className="h-8 rounded-full border border-zinc-200 bg-zinc-50 px-3 text-sm text-zinc-700 outline-none transition focus:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
             aria-label="Sélectionner un modèle"
           >
-            <option value="phi-3.5-financial">Phi-3.5 Financial</option>
-            <option value="phi-3.5">Phi-3.5</option>
-            <option value="gemma4:e2b">Gemma 4</option>
+            {models.map((model) => (
+              <option key={model.id} value={model.id}>
+                {model.label}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -71,7 +82,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
         </div>
       </div>
       <p className="mx-auto mt-2 max-w-3xl text-center text-xs text-zinc-400">
-        Phi-3.5-Financial peut faire des erreurs. Vérifiez les informations importantes.
+        {getChatModelLabel(selectedModel, models)} peut faire des erreurs. Vérifiez les informations importantes.
       </p>
     </div>
   );

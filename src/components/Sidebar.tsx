@@ -63,20 +63,6 @@ export default function Sidebar({
           })}
         </ul>
       </nav>
-
-      {/* TODO: brancher le compte utilisateur réel (avatar, nom, menu) */}
-      <div className="border-t border-white/10 p-2">
-        <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition hover:bg-white/10">
-          <span className="text-base">⚙️</span>
-          Options
-        </button>
-        <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition hover:bg-white/10">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-700 text-xs">
-            U
-          </span>
-          <span className="truncate text-zinc-300">Utilisateur</span>
-        </button>
-      </div>
     </aside>
   );
 }
