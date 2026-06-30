@@ -1,5 +1,53 @@
 import type { Message } from "@/lib/types";
 
+const LAST_MESSAGES_COUNT = 10;
+const MAX_SUMMARY_CHARS = 2400;
+
+type UpstreamRole = "system" | "user" | "assistant";
+type UpstreamMessage = { role: UpstreamRole; content: string };
+
+function compactText(text: string): string {
+    return text.replace(/\s+/g, " ").trim();
+}
+
+function buildSummary(messages: Message[]): string {
+    const lines = messages.map((message) => {
+        const who = message.role === "user" ? "Utilisateur" : "Assistant";
+        return `${who}: ${compactText(message.content)}`;
+    });
+
+    const joined = lines.join("\n");
+    if (joined.length <= MAX_SUMMARY_CHARS) {
+        return joined;
+    }
+
+    return joined.slice(joined.length - MAX_SUMMARY_CHARS);
+}
+
+function buildInferenceMessages(messages: Message[]): UpstreamMessage[] {
+    const recent = messages.slice(-LAST_MESSAGES_COUNT);
+    const older = messages.slice(0, -LAST_MESSAGES_COUNT);
+
+    const recentMapped: UpstreamMessage[] = recent.map(({ role, content }) => ({
+        role,
+        content,
+    }));
+
+    if (older.length === 0) {
+        return recentMapped;
+    }
+
+    const systemSummary: UpstreamMessage = {
+        role: "system",
+        content:
+            "Resume des messages precedents (compresse):\n" +
+            buildSummary(older) +
+            "\n\nReponds en tenant compte de ce resume et des messages recents.",
+    };
+
+    return [systemSummary, ...recentMapped];
+}
+
 function getInferenceUrl() {
     const value = process.env.INFERENCE_URL?.trim();
 
@@ -48,7 +96,7 @@ export async function POST(request: Request) {
             body: JSON.stringify({
                 model: "phi3.5-financial",
                 stream: false,
-                messages: messages.map(({ role, content }) => ({ role, content })),
+                messages: buildInferenceMessages(messages),
             }),
         });
 
