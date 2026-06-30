@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { Message } from "@/lib/types";
 import { getChatModelLabel, type ChatModelOption } from "@/lib/models";
 
@@ -58,7 +60,7 @@ function MessageBubble({ message }: { message: Message }) {
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
-        className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+        className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
           isUser
             ? "bg-zinc-900 text-white dark:bg-zinc-700"
             : "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
@@ -76,9 +78,113 @@ function MessageBubble({ message }: { message: Message }) {
             </p>
           </details>
         )}
-        {message.content}
+        <MarkdownMessage content={message.content} isUser={isUser} />
       </div>
     </div>
+  );
+}
+
+function MarkdownMessage({
+  content,
+  isUser,
+}: {
+  content: string;
+  isUser: boolean;
+}) {
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm]}
+      components={{
+        p: ({ children }) => (
+          <p className="mb-3 whitespace-pre-wrap last:mb-0">{children}</p>
+        ),
+        a: ({ children, href }) => (
+          <a
+            href={href}
+            target="_blank"
+            rel="noreferrer"
+            className={`underline underline-offset-2 ${
+              isUser
+                ? "text-white decoration-white/70"
+                : "text-blue-600 decoration-blue-600/60 dark:text-blue-300 dark:decoration-blue-300/60"
+            }`}
+          >
+            {children}
+          </a>
+        ),
+        ul: ({ children }) => (
+          <ul className="mb-3 list-disc space-y-1 pl-5 last:mb-0">{children}</ul>
+        ),
+        ol: ({ children }) => (
+          <ol className="mb-3 list-decimal space-y-1 pl-5 last:mb-0">{children}</ol>
+        ),
+        li: ({ children }) => <li className="pl-1">{children}</li>,
+        blockquote: ({ children }) => (
+          <blockquote
+            className={`mb-3 border-l-2 pl-3 italic last:mb-0 ${
+              isUser
+                ? "border-white/50 text-white/85"
+                : "border-zinc-300 text-zinc-600 dark:border-zinc-600 dark:text-zinc-300"
+            }`}
+          >
+            {children}
+          </blockquote>
+        ),
+        code: ({ children, className }) => {
+          const isBlock = Boolean(className);
+
+          if (isBlock) {
+            return (
+              <code className={`${className ?? ""} block whitespace-pre-wrap`}>
+                {children}
+              </code>
+            );
+          }
+
+          return (
+            <code
+              className={`rounded px-1 py-0.5 text-[0.9em] ${
+                isUser
+                  ? "bg-white/15 text-white"
+                  : "bg-zinc-200 text-zinc-900 dark:bg-zinc-700 dark:text-zinc-100"
+              }`}
+            >
+              {children}
+            </code>
+          );
+        },
+        pre: ({ children }) => (
+          <pre
+            className={`mb-3 overflow-x-auto rounded-xl p-3 text-xs last:mb-0 ${
+              isUser
+                ? "bg-black/25 text-white"
+                : "bg-zinc-950 text-zinc-100 dark:bg-black"
+            }`}
+          >
+            {children}
+          </pre>
+        ),
+        table: ({ children }) => (
+          <div className="mb-3 overflow-x-auto last:mb-0">
+            <table className="w-full border-collapse text-left text-xs">
+              {children}
+            </table>
+          </div>
+        ),
+        th: ({ children }) => (
+          <th className="border border-zinc-300 px-2 py-1 font-semibold dark:border-zinc-600">
+            {children}
+          </th>
+        ),
+        td: ({ children }) => (
+          <td className="border border-zinc-300 px-2 py-1 dark:border-zinc-600">
+            {children}
+          </td>
+        ),
+      }}
+    >
+      {content}
+    </ReactMarkdown>
   );
 }
 
