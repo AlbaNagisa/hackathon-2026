@@ -25,7 +25,7 @@ export function useChat() {
   const activeSession = sessions.find((s) => s.id === activeId) ?? null;
 
   const sendMessage = useCallback(
-    async (text: string) => {
+    async (text: string, model: string = "phi-3.5-financial") => {
       const content = text.trim();
       if (!content || sending || !activeId) return;
 
@@ -35,7 +35,7 @@ export function useChat() {
 
       setSending(true);
       try {
-        const reply = await generateReply(history);
+        const reply = await generateReply(history, model);
         appendMessage(activeId, { id: newId(), role: "assistant", content: reply });
       } finally {
         setSending(false);
