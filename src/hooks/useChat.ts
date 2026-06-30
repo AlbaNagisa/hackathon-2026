@@ -2,7 +2,8 @@
 
 import { useCallback, useState, useSyncExternalStore } from "react";
 import type { Message } from "@/lib/types";
-import { generateReply } from "@/lib/api";
+import { streamReply } from "@/lib/api";
+import { DEFAULT_CHAT_MODEL } from "@/lib/models";
 import { newId } from "@/lib/storage";
 import {
   appendMessage,
@@ -12,6 +13,8 @@ import {
   newChat,
   selectChat,
   subscribe,
+  updateChatSummary,
+  updateMessage,
 } from "@/lib/chatStore";
 
 export function useChat() {
@@ -25,7 +28,7 @@ export function useChat() {
   const activeSession = sessions.find((s) => s.id === activeId) ?? null;
 
   const sendMessage = useCallback(
-    async (text: string, model: string = "phi-3.5-financial") => {
+    async (text: string, model: string = DEFAULT_CHAT_MODEL) => {
       const content = text.trim();
       if (!content || sending || !activeId) return;
 
@@ -35,8 +38,44 @@ export function useChat() {
 
       setSending(true);
       try {
-        const reply = await generateReply(history, model);
-        appendMessage(activeId, { id: newId(), role: "assistant", content: reply });
+        const assistantId = newId();
+        const assistantMsg: Message = {
+          id: assistantId,
+          role: "assistant",
+          content: "",
+          reflection: "",
+        };
+
+        appendMessage(activeId, assistantMsg);
+
+        let streamedReflection = "";
+        let streamedReply = "";
+
+        await streamReply({
+          model,
+          messages: history,
+          summary: activeSession?.summary,
+          summarizedMessageCount: activeSession?.summarizedMessageCount,
+          onReflectionDelta: (delta) => {
+            streamedReflection += delta;
+            updateMessage(activeId, assistantId, {
+              reflection: streamedReflection,
+            });
+          },
+          onReplyDelta: (delta) => {
+            streamedReply += delta;
+            updateMessage(activeId, assistantId, {
+              content: streamedReply,
+            });
+          },
+          onMetadata: (metadata) => {
+            updateChatSummary(
+              activeId,
+              metadata.summary,
+              metadata.summarizedMessageCount
+            );
+          },
+        });
       } finally {
         setSending(false);
       }

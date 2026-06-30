@@ -104,3 +104,46 @@ export function appendMessage(sessionId: string, message: Message): void {
     ),
   });
 }
+
+export function updateMessage(
+  sessionId: string,
+  messageId: string,
+  patch: Partial<Message>
+): void {
+  const current = read();
+  commit({
+    ...current,
+    sessions: current.sessions.map((s) =>
+      s.id === sessionId
+        ? {
+            ...s,
+            messages: s.messages.map((message) =>
+              message.id === messageId ? { ...message, ...patch } : message
+            ),
+            updatedAt: Date.now(),
+          }
+        : s
+    ),
+  });
+}
+
+export function updateChatSummary(
+  sessionId: string,
+  summary: string | undefined,
+  summarizedMessageCount: number | undefined
+): void {
+  const current = read();
+  commit({
+    ...current,
+    sessions: current.sessions.map((s) =>
+      s.id === sessionId
+        ? {
+            ...s,
+            summary,
+            summarizedMessageCount,
+            updatedAt: Date.now(),
+          }
+        : s
+    ),
+  });
+}

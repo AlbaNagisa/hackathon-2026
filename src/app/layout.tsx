@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TechCorp · Phi-3.5-Financial",
-  description: "Interface de chat TechCorp — assistant Phi-3.5-Financial",
+  title: "TechCorp · Assistant IA",
+  description: "Interface de chat TechCorp avec sélection de modèle IA",
 };
 
 export default function RootLayout({
