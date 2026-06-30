@@ -1,7 +1,30 @@
 import type { Message } from "@/lib/types";
 
-const LAST_MESSAGES_COUNT = 10;
-const MAX_SUMMARY_CHARS = 2400;
+const DEFAULT_LAST_MESSAGES_COUNT = 10;
+const DEFAULT_MAX_SUMMARY_CHARS = 2400;
+
+function getPositiveIntEnv(name: string, fallback: number): number {
+    const raw = process.env[name];
+    if (!raw) {
+        return fallback;
+    }
+
+    const parsed = Number.parseInt(raw, 10);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+        return fallback;
+    }
+
+    return parsed;
+}
+
+const LAST_MESSAGES_COUNT = getPositiveIntEnv(
+    "CHAT_LAST_MESSAGES_COUNT",
+    DEFAULT_LAST_MESSAGES_COUNT
+);
+const MAX_SUMMARY_CHARS = getPositiveIntEnv(
+    "CHAT_MAX_SUMMARY_CHARS",
+    DEFAULT_MAX_SUMMARY_CHARS
+);
 
 type UpstreamRole = "system" | "user" | "assistant";
 type UpstreamMessage = { role: UpstreamRole; content: string };
